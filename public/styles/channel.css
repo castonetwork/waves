@@ -1,0 +1,50 @@
+
+/* scene selector */
+body>.container {
+  display: none;
+  height: 100%;
+}
+
+body[data-scene=list]>.container#list {
+  display: block;
+}
+
+body[data-scene=viewer]>.container#viewer {
+  display: block;
+}
+
+.channelInfo {
+  width: 16em;
+  height: 9em;
+  border: solid gray 1px;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}
+.descriptionContainer {
+  display: flex;
+}
+
+dl {
+  display: flex;
+}
+dd.item {
+  border: solid #efefef 1px;
+  height: 100%;
+}
+.info {
+  padding-left: 0.5em;
+  height: 100%;
+}
+
+.avatar {
+  width : 80px;
+}
+
+dd.noItem {
+  border: none;
+}
+
+#none {
+  display: none;
+}
