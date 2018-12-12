@@ -5,7 +5,7 @@
   "main": "index.html",
   "scripts": {
     "start": "parcel -p 2345 ./public/index.html",
-    "build": "parcel build --no-source-maps -d _site ./public/index.html --public-url ./"
+    "build": "rm -rf _site && parcel build --no-source-maps -d _site ./public/index.html --public-url ./"
   },
   "repository": {
     "type": "git",
