@@ -48,7 +48,7 @@ const updateChannelElement = (peerId, info) =>{
 }
 const updateChannelSnapshot = (peerId, snapshot) =>{
   let item = document.getElementById(peerId);
-  item.querySelector(".channelInfo").style.backgroundImage = `url("${snapshot}")`;
+  if (item) item.querySelector(".channelInfo").style.backgroundImage = `url("${snapshot}")`;
 }
 
 const processEvents = async event => {
