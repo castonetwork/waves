@@ -1,5 +1,6 @@
 import "@babel/polyfill";
 import "setimmediate";
+import adapter from "webrtc-adapter";
 
 const pull = require("pull-stream");
 const Pushable = require("pull-pushable");
