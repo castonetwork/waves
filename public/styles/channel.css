@@ -3,6 +3,29 @@
 body>.container {
   display: none;
   height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body[data-scene=noItem]>.container#noItem {
+  display: block;
+}
+
+svg {
+  height: 100vh;
+  width: 100vw;
+}
+path {
+  fill: none;
+  stroke: #1a1a1a;
+  stroke-width: 0.5px;
+  vector-effect: non-scaling-stroke;
+}
+
+#noItem>.center {
+  position: absolute;
+  left: 60%;
+  top: 48%;
 }
 
 body[data-scene=list]>.container#list {

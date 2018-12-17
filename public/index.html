@@ -8,26 +8,31 @@
   <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
   <link rel="stylesheet" href="//cdn.rawgit.com/milligram/milligram/master/dist/milligram.min.css">
   <link rel="stylesheet" href="./styles/channel.css">
+  <link rel="stylesheet" href="./styles/animation.css">
   <link rel="shortcut icon" href="images/favicon.png" type="image/png">
   <title>Waves</title>
 </head>
-<body data-scene="default">
-<div class="container" id="list">
-  <h1>Waves</h1>
+<body data-scene="noItem">
+<div class="container animated fadeIn" id="noItem">
+  <svg class="animated-lines" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120"></svg>
+  <div class="center">
+    <h1>Waves loading...</h1>
+  </div>
+</div>
+<div class="container animated fadeIn" id="list">
   <div>
     <dl>
-      <dd class="noItem">No channels</dd>
       <dd class="item" id="none">
         <div class="channelInfo">
-          <div class="viewer">viewer 129</div>
+          <div class="viewer"></div>
         </div>
         <div class="descriptionContainer">
           <div class="avatar">
-            <img src="https://www.gravatar.com/avatar/1?d=mp" class="thumbnail" >
+            <img src="https://www.gravatar.com/avatar/1?d=mp" class="thumbnail">
           </div>
           <div class="info">
-            <div class="title">city pop in 1980</div>
-            <div class="streamer">dj momo</div>
+            <div class="title"></div>
+            <div class="streamer"></div>
           </div>
         </div>
       </dd>
@@ -35,19 +40,19 @@
   </div>
 </div>
 <div class="container" id="viewer">
-	<h1 class="head"><span id="streamerId"></span>'s Studio</h1>
-	<div class="row">
-		<div class="column">
-			<h3 id="streamerTitle">
+  <h1 class="head"><span id="streamerId"></span>'s Studio</h1>
+  <div class="row">
+    <div class="column">
+      <h3 id="streamerTitle">
         title
       </h3>
-		</div>
-	</div>
-	<div class="row">
-		<div class="column">
-			<video id="video" autoplay></video>
-		</div>
-	</div>  
+    </div>
+  </div>
+  <div class="row">
+    <div class="column">
+      <video id="video" autoplay></video>
+    </div>
+  </div>
 </div>
 
 <script src="../src/channel.js"></script>
