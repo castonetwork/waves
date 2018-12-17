@@ -186,6 +186,8 @@ const initLoadingScreen = ()=> {
 
     // once the path elements are created, start the animation loop
     svgEl.appendChild(newPathEl);
+    svgEl.viewBox.baseVal.width = 200;
+    svgEl.viewBox.baseVal.height = 120;
     animLoop();
 
   };
