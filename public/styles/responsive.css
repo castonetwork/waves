@@ -1,0 +1,22 @@
+/* responsive css on mobile */
+@media (min-width: 481px) and (max-width: 1024px) {
+  .item {
+    width: 50%;
+    height: 50vh;
+  }
+}
+
+@media (min-width: 320px) and (max-width: 480px) {
+  .item {
+    width: 100%;
+    height: 100vh;
+  }
+}
+
+/* landscape mode */
+@media (max-height: 320px) {
+  .item {
+    width: 50%;
+    height: 50vh;
+  }
+}
