@@ -31,6 +31,8 @@ path {
   height: 100%;
   left: 0;
   top: 0;
+  padding: 1em;
+  text-align: right;
 }
 
 body[data-scene=list]>.container#list {
