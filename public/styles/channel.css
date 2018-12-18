@@ -98,6 +98,10 @@ body[data-scene=viewer]>.container#viewer {
   font-weight: 700;
 }
 
+#viewer {
+  color: #fefefe;
+}
+
 #viewer > div {
   position: absolute;
 }
@@ -117,6 +121,7 @@ body[data-scene=viewer]>.container#viewer {
 #viewer > .head {
   position: absolute;
 }
+
 #viewer > .bottom {
   position: absolute;
   bottom: 0.5em;
