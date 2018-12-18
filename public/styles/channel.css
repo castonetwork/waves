@@ -44,37 +44,73 @@ body[data-scene=viewer]>.container#viewer {
 }
 
 .channelInfo {
-  width: 16em;
-  height: 9em;
-  border: solid gray 1px;
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: solid #fefefe 1px;
+  background-size: contain;
+  background: no-repeat center;
 }
 .descriptionContainer {
   display: flex;
-}
-
-dl {
-  display: flex;
-}
-dd.item {
-  border: solid #efefef 1px;
-  height: 100%;
-}
-.info {
-  padding-left: 0.5em;
+  position: absolute;
+  width: 100%;
   height: 100%;
 }
 
-.avatar {
-  width : 80px;
+.item {
+  position: relative;
+  height: 50vh;
 }
 
-dd.noItem {
+.item > .descriptionContainer {
+  position: absolute;
+  height: 100%;
+}
+
+.item > .descriptionContainer > .avatar {
+  position: absolute;
+  right: 0;
+  height: 5em;
+}
+
+.item > .descriptionContainer > .avatar > img {
+  height: 100%;
+}
+
+.item > .descriptionContainer > .info {
+  position: absolute;
+  bottom: 1em;
+  left: 1.5em;
+}
+
+.noItem {
   border: none;
 }
 
 #none {
   display: none;
+}
+
+/* responsive css on mobile */
+@media (min-width: 481px) and (max-width: 1024px) {
+  .item {
+    width: 50%;
+    height: 50vh;
+  }
+}
+
+@media (min-width: 320px) and (max-width: 480px) {
+  .item {
+    width: 100%;
+    height: 100vh;
+  }
+}
+
+/* landscape mode */
+@media (max-height: 320px) {
+  .item {
+    width: 50%;
+    height: 50vh;
+  }
 }

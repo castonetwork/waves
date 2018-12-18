@@ -40,7 +40,7 @@ const updateChannelElement = (peerId, info) =>{
       item.querySelector(".info > .streamer").textContent = info.profile.nickName;
     }
     item.querySelector(".channelInfo > .viewer").textContent = "0";
-    document.querySelector("dl").appendChild(item);
+    document.querySelector(".list").appendChild(item);
     document.body.setAttribute("data-scene", "list");
   } else {
     /* update info */
@@ -49,7 +49,11 @@ const updateChannelElement = (peerId, info) =>{
 }
 const updateChannelSnapshot = (peerId, snapshot) =>{
   let item = document.getElementById(peerId);
-  if (item) item.querySelector(".channelInfo").style.backgroundImage = `url("${snapshot}")`;
+  if (item) {
+    const itemDom = item.querySelector(".channelInfo");
+    itemDom.style.backgroundImage = `url("${snapshot}")`;
+    itemDom.style.backgroundSize = "cover";
+  }
 }
 
 const processEvents = async event => {
@@ -202,7 +206,7 @@ const initApp = async () => {
   /* set list screen */
   document.body.setAttribute('data-scene', 'list')
   /* clone listDOM */
-  listDOM = document.querySelector('dd.item');
+  listDOM = document.querySelector('div.item');
   channelItem = listDOM.cloneNode(true);
   listDOM.remove();
 
@@ -249,7 +253,7 @@ const initApp = async () => {
     console.log("disconnected", id);
     const element = document.getElementById(id);
     if (element) {
-      if (document.querySelector("dl").children.length===1) {
+      if (document.querySelector(".list").children.length===1) {
         document.body.setAttribute("data-scene", "noItem");
       }
       element.remove();
