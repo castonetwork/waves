@@ -22,6 +22,11 @@ path {
   vector-effect: non-scaling-stroke;
 }
 
+.list {
+  display: flex;
+  flex-wrap: wrap;
+}
+
 #noItem>.center {
   position: absolute;
   display: flex;
@@ -61,6 +66,7 @@ body[data-scene=viewer]>.container#viewer {
 .item {
   position: relative;
   height: 50vh;
+  width: 25vw;
 }
 
 .item > .descriptionContainer {
@@ -70,8 +76,9 @@ body[data-scene=viewer]>.container#viewer {
 
 .item > .descriptionContainer > .avatar {
   position: absolute;
-  right: 0;
   height: 5em;
+  top: 0.5em;
+  right: 0.5em;
 }
 
 .item > .descriptionContainer > .avatar > img {
@@ -84,6 +91,10 @@ body[data-scene=viewer]>.container#viewer {
   left: 1.5em;
 }
 
+.item > .descriptionContainer > .info > .streamer, .title {
+  color: #fefefe;
+  font-weight: 700;
+}
 .noItem {
   border: none;
 }

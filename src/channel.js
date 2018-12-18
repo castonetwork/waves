@@ -57,8 +57,6 @@ const updateChannelSnapshot = (peerId, snapshot) =>{
 }
 
 const processEvents = async event => {
-  console.log("processEvents");
-  console.log(event.type);
   const events = {
     "updateChannelInfo": ({peerId, info})=> {
       console.log("updateChannelInfo", peerId, info);
