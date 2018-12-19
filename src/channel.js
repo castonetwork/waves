@@ -23,6 +23,15 @@ const gotoViewer = (info) => {
 
 const updateChannelElement = (peerId, info) =>{
   let item = document.getElementById(peerId);
+  const updateItemDetails = (item, info) => {
+    item.querySelector(".info > .title").textContent = info.title;
+    if(info && info.profile){
+      item.querySelector(".avatar > .thumbnail").src = info.profile.avatar.image;
+      item.querySelector(".info > .streamer").textContent = info.profile.nickName;
+    }
+    item.querySelector(".channelInfo > .viewer").textContent = "0";
+  }
+
   if (!item) {
     item = channelItem.cloneNode(true);
     item.setAttribute("id", peerId);
@@ -34,18 +43,12 @@ const updateChannelElement = (peerId, info) =>{
         streamerId : peerId
       });
     });
-    
-    item.querySelector(".info > .title").textContent = info.title;
-    if(info && info.profile){
-      item.querySelector(".avatar > .thumbnail").src = info.profile.avatar.image;
-      item.querySelector(".info > .streamer").textContent = info.profile.nickName;
-    }
-    item.querySelector(".channelInfo > .viewer").textContent = "0";
+    updateItemDetails(item, info);
     document.querySelector(".list").appendChild(item);
     document.body.setAttribute("data-scene", "list");
   } else {
     /* update info */
-
+    updateItemDetails(item, info);
   }
 }
 const updateChannelSnapshot = (peerId, snapshot) =>{
