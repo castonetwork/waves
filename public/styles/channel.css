@@ -1,6 +1,5 @@
-
 /* scene selector */
-body>.container {
+body > .container {
   display: none;
   width: 100%;
   height: 100vh;
@@ -9,7 +8,7 @@ body>.container {
   padding: 0;
 }
 
-body[data-scene=noItem]>.container#noItem {
+body[data-scene="noItem"] > .container#noItem {
   display: block;
 }
 
@@ -29,7 +28,7 @@ path {
   flex-wrap: wrap;
 }
 
-#noItem>.center {
+#noItem > .center {
   position: absolute;
   display: flex;
   justify-content: center;
@@ -42,11 +41,11 @@ path {
   text-align: right;
 }
 
-body[data-scene=list]>.container#list {
+body[data-scene="list"] > .container#list {
   display: block;
 }
 
-body[data-scene=viewer]>.container#viewer {
+body[data-scene="viewer"] > .container#viewer {
   display: block;
 }
 
@@ -69,6 +68,7 @@ body[data-scene=viewer]>.container#viewer {
   position: relative;
   height: 50vh;
   width: 25vw;
+  background-color: #77a;
 }
 
 .item > .descriptionContainer {
@@ -93,7 +93,8 @@ body[data-scene=viewer]>.container#viewer {
   left: 1.5em;
 }
 
-.item > .descriptionContainer > .info > .streamer, .title {
+.item > .descriptionContainer > .info > .streamer,
+.title {
   color: #fefefe;
   font-weight: 700;
 }
@@ -119,23 +120,41 @@ body[data-scene=viewer]>.container#viewer {
   object-fit: cover;
   background-color: #7a7;
 }
-#viewer > .head {
+
+#viewer > .floatInfoContainer {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+}
+#viewer > .floatInfoContainer > .head {
   position: absolute;
   font-size: 2em;
-  left: 0.3em;
+  left: 1.5em;
   text-shadow: #000 1px 2px 3px;
 }
 
-#viewer > .bottom {
+#viewer > .floatInfoContainer > .bottom {
   position: absolute;
   bottom: 0.5em;
   right: 0.5em;
 }
 
-#viewer > .bottom > .description {
+#viewer > .floatInfoContainer > .bottom > .description {
   font-size: 1.2em;
   font-weight: 400;
   text-shadow: #000 1px 1px 3px;
+}
+
+#viewer > .floatInfoContainer > .controller {
+  position: absolute;
+  left: 0.5em;
+  top: 0.5em;
+}
+#viewer > .floatInfoContainer > .controller > .exitButton {
+  background-image: url("../images/back.svg");
+  background-size: contain;
+  width: 2.2em;
+  height: 2.2em;
 }
 
 .noItem {
@@ -145,4 +164,3 @@ body[data-scene=viewer]>.container#viewer {
 #none {
   display: none;
 }
-

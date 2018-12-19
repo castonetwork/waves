@@ -15,10 +15,13 @@ let listDOM, channelItem;
 window.pull = pull;
 const createNode = require("./create-node");
 
-const gotoViewer = (info) => {
-  document.body.setAttribute('data-scene', 'viewer')
+const updateViewerInfo = info => {
   document.getElementById('streamerId').textContent = info.profile.nickName;
   document.getElementById('streamerTitle').textContent = info.title;
+}
+const gotoViewer = info => {
+  document.body.setAttribute('data-scene', 'viewer');
+  updateViewerInfo(info);
 }
 
 const updateChannelElement = (peerId, info) =>{
@@ -30,6 +33,7 @@ const updateChannelElement = (peerId, info) =>{
       item.querySelector(".info > .streamer").textContent = info.profile.nickName;
     }
     item.querySelector(".channelInfo > .viewer").textContent = "0";
+    updateViewerInfo(info);
   }
 
   if (!item) {
@@ -131,6 +135,10 @@ const initApp = async () => {
   listDOM.remove();
 
   document.body.setAttribute('data-scene', 'noItem')
+
+  document.querySelector(".exitButton").addEventListener("click",
+    () => document.body.setAttribute("data-scene", "list"))
+
   initLoadingScreen();
 
   const node = await createNode();
