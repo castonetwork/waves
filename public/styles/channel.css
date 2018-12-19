@@ -117,15 +117,25 @@ body[data-scene=viewer]>.container#viewer {
   max-width: 100%;
   max-height: 100%;
   object-fit: cover;
+  background-color: #7a7;
 }
 #viewer > .head {
   position: absolute;
+  font-size: 2em;
+  left: 0.3em;
+  text-shadow: #000 1px 2px 3px;
 }
 
 #viewer > .bottom {
   position: absolute;
   bottom: 0.5em;
   right: 0.5em;
+}
+
+#viewer > .bottom > .description {
+  font-size: 1.2em;
+  font-weight: 400;
+  text-shadow: #000 1px 1px 3px;
 }
 
 .noItem {
