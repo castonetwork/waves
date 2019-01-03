@@ -101,6 +101,10 @@ const updateChannelSnapshot = (peerId, snapshot) =>{
 const processEvents = async event => {
   console.log("Incoming event ", event.topic);
   const events = {
+    "sendCreatedAnswer": async ({sdp}) => {
+      console.log('controller answered', sdp)
+      await pc.setRemoteDescription(sdp)
+    },
     "updateChannelInfo": ({peerId, info})=> {
       console.log("updateChannelInfo", peerId, info);
       updateChannelElement(peerId, info)
