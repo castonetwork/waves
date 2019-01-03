@@ -99,6 +99,7 @@ const updateChannelSnapshot = (peerId, snapshot) =>{
 };
 
 const processEvents = async event => {
+  console.log("Incoming event ", event.topic);
   const events = {
     "updateChannelInfo": ({peerId, info})=> {
       console.log("updateChannelInfo", peerId, info);
@@ -107,11 +108,11 @@ const processEvents = async event => {
     "updateChannelSnapshot": ({peerId, snapshot}) =>{
       updateChannelSnapshot(peerId, snapshot)
     },
-    "sendChannelsList": ({peers})=> {
-      for (let peer in peers) {
-        if (peers[peer] && peers[peer].roomInfo) {
-          console.log("GOT PEER", peers[peer].roomInfo);
-          updateChannelElement(peer, peers[peer])
+    "sendChannelsList": ({channels})=> {
+      for (let channel in channels) {
+        if (channels[channel]) {
+          console.log("GOT iceEER", channels[channel]);
+          updateChannelElement(channel, channels[channel])
         }
       }
     },
@@ -120,10 +121,10 @@ const processEvents = async event => {
       pc.addIceCandidate(ice);
     }
   };
-  if (events[event.type]) return events[event.type](event);
+  if (events[event.topic]) return events[event.topic](event);
   else {
     return new Promise((resolve, reject) => {
-      reject("No processEvent", event.type);
+      reject("No processEvent", event.topic);
     });
   }
 };
