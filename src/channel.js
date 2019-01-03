@@ -16,14 +16,51 @@ window.pull = pull;
 const createNode = require("./create-node");
 
 const updateViewerInfo = info => {
-  document.getElementById('streamerId').textContent = info.profile.nickName;
+  document.getElementById('streamerId').textContent = info.profile && info.profile.nickName;
   document.getElementById('streamerTitle').textContent = info.title;
-}
+};
 const gotoViewer = info => {
   document.body.setAttribute('data-scene', 'viewer');
   updateViewerInfo(info);
-}
+};
 
+const mediaStream = new MediaStream();
+const pc = new RTCPeerConnection( { ...configuration, sdpSemantics: 'unified-plan' } );
+pc.onicecandidate = event => {
+  console.log("[ICE]", event);
+  if (event.candidate) {
+    sendController.push({
+      topic: "sendTrickleCandidate",
+      candidate: event.candidate
+    });
+  }
+};
+pc.oniceconnectionstatechange = function (e) {
+  console.log("[ICE STATUS] ", pc.iceConnectionState);
+};
+pc.ontrack = async event => {
+  console.log("[ON track]", event);
+  mediaStream.addTrack(event.track);
+};
+
+const playChannel = async peerId => {
+  /* initialize mediaStream */
+  mediaStream.getTracks().forEach(mediaStream.removeTrack);
+  try {
+    await pc.setLocalDescription(await pc.createOffer({
+      offerToReceiveAudio: true,
+      offerToReceiveVideo: true
+    }));
+    sendController.push({
+      topic: "sendCreateOffer",
+      sdp: pc.localDescription,
+      peerId
+    });
+    console.log("localDescription", pc.localDescription);
+  } catch (err) {
+    console.error(err);
+  }
+};
 const updateChannelElement = (peerId, info) =>{
   let item = document.getElementById(peerId);
   const updateItemDetails = (item, info) => {
@@ -39,14 +76,11 @@ const updateChannelElement = (peerId, info) =>{
   if (!item) {
     item = channelItem.cloneNode(true);
     item.setAttribute("id", peerId);
-    item.addEventListener("click", e => {
-      console.log("send request OFFER");
+    item.addEventListener("click", async ()=> {
       gotoViewer(info);
-      sendController.push({
-        type: "requestOfferSDP",
-        streamerId : peerId
-      });
+      await playChannel(peerId);
     });
+
     updateItemDetails(item, info);
     document.querySelector(".list").appendChild(item);
     document.body.setAttribute("data-scene", "list");
@@ -54,7 +88,7 @@ const updateChannelElement = (peerId, info) =>{
     /* update info */
     updateItemDetails(item, info);
   }
-}
+};
 const updateChannelSnapshot = (peerId, snapshot) =>{
   let item = document.getElementById(peerId);
   if (item) {
@@ -62,7 +96,7 @@ const updateChannelSnapshot = (peerId, snapshot) =>{
     itemDom.style.backgroundImage = `url("${snapshot}")`;
     itemDom.style.backgroundSize = "cover";
   }
-}
+};
 
 const processEvents = async event => {
   const events = {
@@ -73,46 +107,17 @@ const processEvents = async event => {
     "updateChannelSnapshot": ({peerId, snapshot}) =>{
       updateChannelSnapshot(peerId, snapshot)
     },
-    "responseOfferSDP": async ({jsep}) => {
-      let pc = new RTCPeerConnection(configuration);
-
-      pc.onicecandidate = event => {
-        console.log("[ICE]", event);
-        if (event.candidate) {
-          sendController.push({
-            type: "sendTrickleCandidate",
-            candidate: event.candidate
-          });
-        }
-      };
-
-      pc.oniceconnectionstatechange = function (e) {
-        console.log("[ICE STATUS] ", pc.iceConnectionState);
-      };
-      pc.ontrack = async event => {
-        console.log("[ON track]", event);
-        document.getElementById("video").srcObject = event.streams[0];
-      };
-
-      try {
-        await pc.setRemoteDescription(jsep);
-        await pc.setLocalDescription(await pc.createAnswer());
-        sendController.push({
-          type: "sendCreateAnswer",
-          jsep: pc.localDescription
-        });
-        console.log("localDescription", pc.localDescription);
-      } catch (err) {
-        console.error(err);
-      }
-    },
-    "sendChannelList": ({peers})=> {
+    "sendChannelsList": ({peers})=> {
       for (let peer in peers) {
         if (peers[peer] && peers[peer].roomInfo) {
           console.log("GOT PEER", peers[peer].roomInfo);
           updateChannelElement(peer, peers[peer])
         }
       }
+    },
+    "sendTrickleCandidate": ({ice})=> {
+      console.log("received iceCandidate");
+      pc.addIceCandidate(ice);
     }
   };
   if (events[event.type]) return events[event.type](event);
@@ -124,7 +129,7 @@ const processEvents = async event => {
 };
 
 const initApp = async () => {
-  let streamers = {};
+  let prisms = {};
   console.log("init app");
 
   /* set list screen */
@@ -139,6 +144,8 @@ const initApp = async () => {
   document.querySelector(".exitButton").addEventListener("click",
     () => document.body.setAttribute("data-scene", "list"))
 
+  /* set video srcObject to mediaStream */
+  document.getElementById("video").srcObject = mediaStream;
   initLoadingScreen();
 
   const node = await createNode();
@@ -147,12 +154,12 @@ const initApp = async () => {
 
     console.log("Discovered: " + idStr);
 
-    !streamers[idStr] &&
+    !prisms[idStr] &&
     node.dialProtocol(peerInfo, "/controller", (err, conn) => {
       if (err) {
         return;
       }
-      streamers[idStr] = true;
+      prisms[idStr] = true;
       pull(
         sendController,
         stringify(),
@@ -168,7 +175,7 @@ const initApp = async () => {
         })
       );
       sendController.push({
-        type: "requestPeerInfo",
+        topic: "registerWaveInfo",
         peerId: node.peerInfo.id.toB58String()
       })
     });
@@ -186,7 +193,7 @@ const initApp = async () => {
       }
       element.remove();
     }
-    delete streamers[id];
+    delete prisms[id];
   });
   node.start(err => {
     if (err) throw err;
