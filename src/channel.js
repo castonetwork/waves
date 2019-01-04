@@ -1,6 +1,6 @@
 import "@babel/polyfill";
 import "setimmediate";
-import initLoadingScreen from "./loadingScreen";
+import {initLoadingScreen, pauseAnimation, resumeAnimation} from "./loadingScreen";
 import adapter from "webrtc-adapter";
 
 const pull = require("pull-stream");
@@ -22,6 +22,9 @@ const updateViewerInfo = info => {
 const gotoViewer = info => {
   document.body.setAttribute('data-scene', 'viewer');
   updateViewerInfo(info);
+};
+const gotoList = ()=> {
+  document.body.setAttribute("data-scene", "list");
 };
 
 const mediaStream = new MediaStream();
@@ -45,7 +48,7 @@ pc.ontrack = async event => {
 
 const playChannel = async peerId => {
   /* initialize mediaStream */
-  mediaStream.getTracks().forEach(mediaStream.removeTrack);
+  mediaStream.getTracks().forEach(o=>mediaStream.removeTrack(o));
   try {
     await pc.setLocalDescription(await pc.createOffer({
       offerToReceiveAudio: true,
@@ -60,6 +63,7 @@ const playChannel = async peerId => {
   } catch (err) {
     console.error(err);
   }
+  console.log("playChannel", mediaStream.getTracks());
 };
 const updateChannelElement = (peerId, info) =>{
   let item = document.getElementById(peerId);
@@ -71,8 +75,7 @@ const updateChannelElement = (peerId, info) =>{
     }
     item.querySelector(".channelInfo > .viewer").textContent = "0";
     updateViewerInfo(info);
-  }
-
+  };
   if (!item) {
     item = channelItem.cloneNode(true);
     item.setAttribute("id", peerId);
@@ -88,6 +91,7 @@ const updateChannelElement = (peerId, info) =>{
     /* update info */
     updateItemDetails(item, info);
   }
+  checkEmptyList();
 };
 const updateChannelSnapshot = (peerId, snapshot) =>{
   let item = document.getElementById(peerId);
@@ -133,6 +137,15 @@ const processEvents = async event => {
   }
 };
 
+function checkEmptyList() {
+  if (document.querySelector(".list").children.length===0) {
+    document.body.setAttribute("data-scene", "noItem");
+    resumeAnimation();
+  } else {
+    pauseAnimation();
+  }
+}
+
 const initApp = async () => {
   let prisms = {};
   console.log("init app");
@@ -146,8 +159,7 @@ const initApp = async () => {
 
   document.body.setAttribute('data-scene', 'noItem')
 
-  document.querySelector(".exitButton").addEventListener("click",
-    () => document.body.setAttribute("data-scene", "list"))
+  document.querySelector(".exitButton").addEventListener("click", gotoList);
 
   /* set video srcObject to mediaStream */
   document.getElementById("video").srcObject = mediaStream;
@@ -157,7 +169,7 @@ const initApp = async () => {
   node.on("peer:discovery", peerInfo => {
     const idStr = peerInfo.id.toB58String();
 
-    console.log("Discovered: " + idStr);
+    // console.log("Discovered: " + idStr);
 
     !prisms[idStr] &&
     node.dialProtocol(peerInfo, "/controller", (err, conn) => {
@@ -165,6 +177,7 @@ const initApp = async () => {
         return;
       }
       prisms[idStr] = true;
+      console.log("dialed: ", idStr);
       pull(
         sendController,
         stringify(),
@@ -193,10 +206,8 @@ const initApp = async () => {
     console.log("disconnected", id);
     const element = document.getElementById(id);
     if (element) {
-      if (document.querySelector(".list").children.length===1) {
-        document.body.setAttribute("data-scene", "noItem");
-      }
       element.remove();
+      checkEmptyList();
     }
     delete prisms[id];
   });

@@ -1,4 +1,7 @@
+let isPlay = false;
+
 const initLoadingScreen = ()=> {
+  isPlay = true;
   var svgEl = document.querySelector('.animated-lines');
 
   var randomRange = function(min, max) {
@@ -66,7 +69,7 @@ const initLoadingScreen = ()=> {
     }
 
     var animLoop = function() {
-      newPathEl.setAttribute('d', createPathString());
+      isPlay && newPathEl.setAttribute('d', createPathString());
       requestAnimationFrame(animLoop);
     }
 
@@ -81,4 +84,11 @@ const initLoadingScreen = ()=> {
   createLines();
 };
 
-module.exports = initLoadingScreen;
+const pauseAnimation = ()=> isPlay = false;
+const resumeAnimation = ()=> isPlay = true;
+
+module.exports = {
+  initLoadingScreen,
+  pauseAnimation,
+  resumeAnimation,
+};
