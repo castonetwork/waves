@@ -23,11 +23,21 @@ path {
   vector-effect: non-scaling-stroke;
 }
 
+#list>div, .list {
+  height: 100%;
+}
+
 .list {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
 }
+/*
+.list > .item:first-child:nth-last-child(1) {
 
+}
+*/
 #noItem > .center {
   position: absolute;
   display: flex;
