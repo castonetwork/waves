@@ -120,6 +120,7 @@ body[data-scene="viewer"] > .container#viewer {
 #viewer > .videoContainer {
   width: 100%;
   height: 100%;
+  object-fit: cover;
 }
 
 #viewer > .videoContainer > #video {
