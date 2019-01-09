@@ -102,9 +102,8 @@ const updateChannelElement = (prismPeerId, peerId, info) =>{
 const updateChannelSnapshot = (peerId, snapshot) =>{
   let item = document.getElementById(peerId);
   if (item) {
-    const itemDom = item.querySelector(".channelInfo");
-    itemDom.style.backgroundImage = `url("${snapshot}")`;
-    itemDom.style.backgroundSize = "cover";
+    const itemDom = item.querySelector(".channelInfo>.imagePreview");
+    itemDom.src = `${snapshot}`;
   }
 };
 
