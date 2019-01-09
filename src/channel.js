@@ -11,7 +11,8 @@ const configuration = {
 };
 
 let listDOM, channelItem;
-window.pull = pull;
+let serviceId;
+
 const createNode = require("./create-node");
 
 const updateViewerInfo = info => {
@@ -156,6 +157,7 @@ const initApp = async () => {
   let prisms = {};
   window.prisms = prisms;
   console.log("init app");
+  serviceId = new URL(location.href).searchParams.get('serviceId');
 
   /* set list screen */
   document.body.setAttribute('data-scene', 'list')
@@ -179,7 +181,7 @@ const initApp = async () => {
     // console.log("Discovered: " + prismPeerId);
 
     !prisms[prismPeerId] &&
-    node.dialProtocol(peerInfo, "/controller", (err, conn) => {
+    node.dialProtocol(peerInfo, `/controller/${serviceId}`, (err, conn) => {
       if (err) {
         return;
       }
