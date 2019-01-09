@@ -10,7 +10,6 @@ const configuration = {
   iceServers: [{urls: "stun:stun.l.google.com:19302"}]
 };
 
-let sendController = Pushable();
 let listDOM, channelItem;
 window.pull = pull;
 const createNode = require("./create-node");
@@ -26,13 +25,14 @@ const gotoViewer = info => {
 const gotoList = ()=> {
   document.body.setAttribute("data-scene", "list");
 };
-
+let selectedFlowPeerId;
+let currentPushable;
 const mediaStream = new MediaStream();
 const pc = new RTCPeerConnection( { ...configuration, sdpSemantics: 'unified-plan' } );
 pc.onicecandidate = event => {
   console.log("[ICE]", event);
   if (event.candidate) {
-    sendController.push({
+    currentPushable.push({
       topic: "sendTrickleCandidate",
       candidate: event.candidate
     });
@@ -40,13 +40,18 @@ pc.onicecandidate = event => {
 };
 pc.oniceconnectionstatechange = function (e) {
   console.log("[ICE STATUS] ", pc.iceConnectionState);
+  if(pc.iceConnectionState === "disconnected"){
+
+  }
 };
 pc.ontrack = async event => {
   console.log("[ON track]", event);
   mediaStream.addTrack(event.track);
 };
 
-const playChannel = async peerId => {
+const playChannel = async (prismPeerId, peerId) => {
+  selectedFlowPeerId = peerId;
+  currentPushable = prisms[prismPeerId].pushable;
   /* initialize mediaStream */
   mediaStream.getTracks().forEach(o=>mediaStream.removeTrack(o));
   try {
@@ -54,7 +59,7 @@ const playChannel = async peerId => {
       offerToReceiveAudio: true,
       offerToReceiveVideo: true
     }));
-    sendController.push({
+    currentPushable.push({
       topic: "sendCreateOffer",
       sdp: pc.localDescription,
       peerId
@@ -65,7 +70,7 @@ const playChannel = async peerId => {
   }
   console.log("playChannel", mediaStream.getTracks());
 };
-const updateChannelElement = (peerId, info) =>{
+const updateChannelElement = (prismPeerId, peerId, info) =>{
   let item = document.getElementById(peerId);
   const updateItemDetails = (item, info) => {
     item.querySelector(".info > .title").textContent = info.title;
@@ -81,7 +86,7 @@ const updateChannelElement = (peerId, info) =>{
     item.setAttribute("id", peerId);
     item.addEventListener("click", async ()=> {
       gotoViewer(info);
-      await playChannel(peerId);
+      await playChannel(prismPeerId, peerId);
     });
 
     updateItemDetails(item, info);
@@ -102,7 +107,7 @@ const updateChannelSnapshot = (peerId, snapshot) =>{
   }
 };
 
-const processEvents = async event => {
+const processEvents = async (prismPeerId, event) => {
   console.log("Incoming event ", event.topic);
   const events = {
     "sendCreatedAnswer": async ({sdp}) => {
@@ -111,7 +116,7 @@ const processEvents = async event => {
     },
     "updateChannelInfo": ({peerId, info})=> {
       console.log("updateChannelInfo", peerId, info);
-      updateChannelElement(peerId, info)
+      updateChannelElement(prismPeerId, peerId, info)
     },
     "updateChannelSnapshot": ({peerId, snapshot}) =>{
       updateChannelSnapshot(peerId, snapshot)
@@ -120,7 +125,8 @@ const processEvents = async event => {
       for (let channel in channels) {
         if (channels[channel]) {
           console.log("GOT iceEER", channels[channel]);
-          updateChannelElement(channel, channels[channel])
+          prisms[prismPeerId].flowPeerId = channel;
+          updateChannelElement(prismPeerId, channel, channels[channel])
         }
       }
     },
@@ -148,6 +154,7 @@ function checkEmptyList() {
 
 const initApp = async () => {
   let prisms = {};
+  window.prisms = prisms;
   console.log("init app");
 
   /* set list screen */
@@ -167,49 +174,55 @@ const initApp = async () => {
 
   const node = await createNode();
   node.on("peer:discovery", peerInfo => {
-    const idStr = peerInfo.id.toB58String();
+    const prismPeerId = peerInfo.id.toB58String();
 
-    // console.log("Discovered: " + idStr);
+    // console.log("Discovered: " + prismPeerId);
 
-    !prisms[idStr] &&
+    !prisms[prismPeerId] &&
     node.dialProtocol(peerInfo, "/controller", (err, conn) => {
       if (err) {
         return;
       }
-      prisms[idStr] = true;
-      console.log("dialed: ", idStr);
+      let sendToPrism = Pushable();
+      prisms[prismPeerId] = {
+        isDialed : true,
+        pushable : sendToPrism
+      };
+      console.log("dialed: ", prismPeerId);
       pull(
-        sendController,
+        sendToPrism,
         stringify(),
         conn,
         pull.map(o => window.JSON.parse(o.toString())),
         pull.drain(async o => {
           try {
-            await processEvents(o);
+            await processEvents(prismPeerId, o);
           } catch(e) {
             console.error("[event]", e);
           } finally {
           }
         })
       );
-      sendController.push({
+      sendToPrism.push({
         topic: "registerWaveInfo",
         peerId: node.peerInfo.id.toB58String()
       })
     });
   });
   node.on("peer:connect", peerInfo => {
-    console.log("connected", peerInfo.id.toB58String())
+    // console.log("connected", peerInfo.id.toB58String())
   });
   node.on("peer:disconnect", peerInfo => {
-    const id = peerInfo.id.toB58String();
-    console.log("disconnected", id);
-    const element = document.getElementById(id);
-    if (element) {
-      element.remove();
-      checkEmptyList();
-    }
-    delete prisms[id];
+    const peerId = peerInfo.id.toB58String();
+    console.log("disconnected", peerId);
+    // if(prisms[peerId]){
+    //   const element = document.getElementById(peerId);
+    //   if (element) {
+    //     element.remove();
+    //     checkEmptyList();
+    //   }
+    //   delete prisms[peerId];
+    // }
   });
   node.start(err => {
     if (err) throw err;
