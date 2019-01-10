@@ -177,7 +177,12 @@ body[data-scene="viewer"] > .container#viewer {
   width: 2.2em;
   height: 2.2em;
 }
+#viewer > .floatInfoContainer > #currentViewerCount{
+  position: absolute;
+  left: 0.5em;
+  bottom: 0.5em;
 
+}
 .noItem {
   border: none;
 }

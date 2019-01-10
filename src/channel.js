@@ -121,6 +121,9 @@ const processEvents = async (prismPeerId, event) => {
     "updateChannelSnapshot": ({peerId, snapshot}) =>{
       updateChannelSnapshot(peerId, snapshot)
     },
+    "updateWaves": ({waves})=>{
+      document.getElementById("currentViewerCount").textContent = `Current Viewers ${Object.entries(waves).length}`
+    },
     "sendChannelsList": ({channels})=> {
       for (let channel in channels) {
         if (channels[channel]) {
