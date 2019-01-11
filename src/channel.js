@@ -26,79 +26,7 @@ const gotoViewer = info => {
 const gotoList = ()=> {
   document.body.setAttribute("data-scene", "list");
 };
-let selectedFlowPeerId;
-let currentPushable;
-const mediaStream = new MediaStream();
-const pc = new RTCPeerConnection( { ...configuration, sdpSemantics: 'unified-plan' } );
-pc.onicecandidate = event => {
-  console.log("[ICE]", event);
-  if (event.candidate) {
-    currentPushable.push({
-      topic: "sendTrickleCandidate",
-      candidate: event.candidate
-    });
-  }
-};
-pc.oniceconnectionstatechange = function (e) {
-  console.log("[ICE STATUS] ", pc.iceConnectionState);
-  if(pc.iceConnectionState === "disconnected"){
 
-  }
-};
-pc.ontrack = async event => {
-  console.log("[ON track]", event);
-  mediaStream.addTrack(event.track);
-};
-
-const playChannel = async (prismPeerId, peerId) => {
-  selectedFlowPeerId = peerId;
-  currentPushable = prisms[prismPeerId].pushable;
-  /* initialize mediaStream */
-  mediaStream.getTracks().forEach(o=>mediaStream.removeTrack(o));
-  try {
-    await pc.setLocalDescription(await pc.createOffer({
-      offerToReceiveAudio: true,
-      offerToReceiveVideo: true
-    }));
-    currentPushable.push({
-      topic: "sendCreateOffer",
-      sdp: pc.localDescription,
-      peerId
-    });
-    console.log("localDescription", pc.localDescription);
-  } catch (err) {
-    console.error(err);
-  }
-  console.log("playChannel", mediaStream.getTracks());
-};
-const updateChannelElement = (prismPeerId, peerId, info) =>{
-  let item = document.getElementById(peerId);
-  const updateItemDetails = (item, info) => {
-    item.querySelector(".info > .title").textContent = info.title;
-    if(info && info.profile){
-      item.querySelector(".avatar > .thumbnail").src = info.profile.avatar.image;
-      item.querySelector(".info > .streamer").textContent = info.profile.nickName;
-    }
-    item.querySelector(".channelInfo > .viewer").textContent = "0";
-    updateViewerInfo(info);
-  };
-  if (!item) {
-    item = channelItem.cloneNode(true);
-    item.setAttribute("id", peerId);
-    item.addEventListener("click", async ()=> {
-      gotoViewer(info);
-      await playChannel(prismPeerId, peerId);
-    });
-
-    updateItemDetails(item, info);
-    document.querySelector(".list").appendChild(item);
-    document.body.setAttribute("data-scene", "list");
-  } else {
-    /* update info */
-    updateItemDetails(item, info);
-  }
-  checkEmptyList();
-};
 const updateChannelSnapshot = (peerId, snapshot) =>{
   let item = document.getElementById(peerId);
   if (item) {
@@ -107,44 +35,6 @@ const updateChannelSnapshot = (peerId, snapshot) =>{
   }
 };
 
-const processEvents = async (prismPeerId, event) => {
-  console.log("Incoming event ", event.topic);
-  const events = {
-    "sendCreatedAnswer": async ({sdp}) => {
-      console.log('controller answered', sdp)
-      await pc.setRemoteDescription(sdp)
-    },
-    "updateChannelInfo": ({peerId, info})=> {
-      console.log("updateChannelInfo", peerId, info);
-      updateChannelElement(prismPeerId, peerId, info)
-    },
-    "updateChannelSnapshot": ({peerId, snapshot}) =>{
-      updateChannelSnapshot(peerId, snapshot)
-    },
-    "updateWaves": ({waves})=>{
-      document.getElementById("currentViewerCount").textContent = `Current Viewers ${Object.entries(waves).length}`
-    },
-    "sendChannelsList": ({channels})=> {
-      for (let channel in channels) {
-        if (channels[channel]) {
-          console.log("GOT iceEER", channels[channel]);
-          prisms[prismPeerId].flowPeerId = channel;
-          updateChannelElement(prismPeerId, channel, channels[channel])
-        }
-      }
-    },
-    "sendTrickleCandidate": ({ice})=> {
-      console.log("received iceCandidate");
-      pc.addIceCandidate(ice);
-    }
-  };
-  if (events[event.topic]) return events[event.topic](event);
-  else {
-    return new Promise((resolve, reject) => {
-      reject("No processEvent", event.topic);
-    });
-  }
-};
 
 function checkEmptyList() {
   if (document.querySelector(".list").children.length===0) {
@@ -154,6 +44,8 @@ function checkEmptyList() {
     pauseAnimation();
   }
 }
+
+let selectedFlowPeerId;
 
 const initApp = async () => {
   let prisms = {};
@@ -172,27 +64,139 @@ const initApp = async () => {
 
   document.querySelector(".exitButton").addEventListener("click", gotoList);
 
-  /* set video srcObject to mediaStream */
-  document.getElementById("video").srcObject = mediaStream;
   initLoadingScreen();
 
   const node = await createNode();
   node.on("peer:discovery", peerInfo => {
-    const prismPeerId = peerInfo.id.toB58String();
-
     // console.log("Discovered: " + prismPeerId);
-
+    const prismPeerId = peerInfo.id.toB58String();
     !prisms[prismPeerId] &&
     node.dialProtocol(peerInfo, `/controller/${serviceId}`, (err, conn) => {
       if (err) {
         return;
       }
+      console.log("dialed: ", prismPeerId);
+
       let sendToPrism = Pushable();
+      const mediaStream = new MediaStream();
       prisms[prismPeerId] = {
         isDialed : true,
-        pushable : sendToPrism
+        pushable : sendToPrism,
+        mediaStream
       };
-      console.log("dialed: ", prismPeerId);
+
+
+      const playChannel = async (peerId) => {
+        /* initialize mediaStream */
+        mediaStream.getTracks().forEach(o=>mediaStream.removeTrack(o));
+        try {
+          let pc = new RTCPeerConnection( { ...configuration, sdpSemantics: 'unified-plan' } );
+          prisms[prismPeerId].pc = pc;
+          pc.onicecandidate = event => {
+            console.log("[ICE]", event);
+            if (event.candidate) {
+              sendToPrism.push({
+                topic: "sendTrickleCandidate",
+                candidate: event.candidate
+              });
+            }
+          };
+          pc.oniceconnectionstatechange = function (e) {
+            console.log("[ICE STATUS] ", pc.iceConnectionState);
+            if(pc.iceConnectionState === "disconnected"){
+              pc.getTransceivers().forEach(transceiver => transceiver.direction = 'inactive');
+            }
+          };
+          pc.ontrack = async event => {
+            console.log("[ON track]", event);
+            mediaStream.addTrack(event.track);
+          };
+
+          await pc.setLocalDescription(await pc.createOffer({
+            offerToReceiveAudio: true,
+            offerToReceiveVideo: true
+          }));
+          sendToPrism.push({
+            topic: "sendCreateOffer",
+            sdp: pc.localDescription,
+            peerId
+          });
+          console.log("localDescription", pc.localDescription);
+          /* set video srcObject to mediaStream */
+          document.getElementById("video").srcObject = mediaStream;
+
+        } catch (err) {
+          console.error(err);
+        }
+        console.log("playChannel", mediaStream.getTracks());
+      };
+      const processEvents = async (event) => {
+        let pc = prisms[prismPeerId].pc;
+        console.log("Incoming event ", event.topic);
+        const events = {
+          "sendCreatedAnswer": async ({sdp}) => {
+            console.log('controller answered', sdp)
+            await pc.setRemoteDescription(sdp)
+          },
+          "updateChannelInfo": ({peerId, info})=> {
+            console.log("updateChannelInfo", peerId, info);
+            updateChannelElement(peerId, info)
+          },
+          "updateChannelSnapshot": ({peerId, snapshot}) =>{
+            updateChannelSnapshot(peerId, snapshot)
+          },
+          "updateWaves": ({waves})=>{
+            document.getElementById("currentViewerCount").textContent = `Current Viewers ${Object.entries(waves).length}`
+          },
+          "sendChannelsList": ({channels})=> {
+            for (let channel in channels) {
+              if (channels[channel]) {
+                console.log("GOT iceEER", channels[channel]);
+                prisms[prismPeerId].flowPeerId = channel;
+                updateChannelElement(channel, channels[channel])
+              }
+            }
+          },
+          "sendTrickleCandidate": ({ice})=> {
+            console.log("received iceCandidate");
+            pc.addIceCandidate(ice);
+          }
+        };
+        if (events[event.topic]) return events[event.topic](event);
+        else {
+          return new Promise((resolve, reject) => {
+            reject("No processEvent", event.topic);
+          });
+        }
+      };
+      const updateChannelElement = (peerId, info) =>{
+        let item = document.getElementById(peerId);
+        const updateItemDetails = (item, info) => {
+          item.querySelector(".info > .title").textContent = info.title;
+          if(info && info.profile){
+            item.querySelector(".avatar > .thumbnail").src = info.profile.avatar.image;
+            item.querySelector(".info > .streamer").textContent = info.profile.nickName;
+          }
+          item.querySelector(".channelInfo > .viewer").textContent = "0";
+          updateViewerInfo(info);
+        };
+        if (!item) {
+          item = channelItem.cloneNode(true);
+          item.setAttribute("id", peerId);
+          item.addEventListener("click", async ()=> {
+            gotoViewer(info);
+            await playChannel(peerId);
+          });
+
+          updateItemDetails(item, info);
+          document.querySelector(".list").appendChild(item);
+          document.body.setAttribute("data-scene", "list");
+        } else {
+          /* update info */
+          updateItemDetails(item, info);
+        }
+        checkEmptyList();
+      };
       pull(
         sendToPrism,
         stringify(),
@@ -200,7 +204,7 @@ const initApp = async () => {
         pull.map(o => window.JSON.parse(o.toString())),
         pull.drain(async o => {
           try {
-            await processEvents(prismPeerId, o);
+            await processEvents(o);
           } catch(e) {
             console.error("[event]", e);
           } finally {
