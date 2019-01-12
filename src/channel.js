@@ -190,7 +190,8 @@ const initApp = async () => {
 
           updateItemDetails(item, info);
           document.querySelector(".list").appendChild(item);
-          document.body.setAttribute("data-scene", "list");
+          (document.body.getAttribute("data-scene") !== "viewer") && document.body.setAttribute("data-scene", "list");
+
         } else {
           /* update info */
           updateItemDetails(item, info);
