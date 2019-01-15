@@ -256,14 +256,14 @@ const initApp = async () => {
   node.on("peer:disconnect", peerInfo => {
     const peerId = peerInfo.id.toB58String();
     console.log("disconnected", peerId);
-    // if(prisms[peerId]){
-    //   const element = document.getElementById(peerId);
-    //   if (element) {
-    //     element.remove();
-    //     checkEmptyList();
-    //   }
-    //   delete prisms[peerId];
-    // }
+    if(prisms[peerId]){
+      const element = document.getElementById(peerId);
+      if (element) {
+        element.remove();
+        checkEmptyList();
+      }
+      delete prisms[peerId];
+    }
   });
   node.start(err => {
     if (err) throw err;
