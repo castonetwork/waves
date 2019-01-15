@@ -57,7 +57,14 @@ const initApp = async () => {
   window.prisms = prisms;
   console.log("init app");
   serviceId = new URL(location.href).searchParams.get('serviceId');
-
+  let geoPosition;
+  try{
+    geoPosition = await new Promise((resolve, reject)=>{
+      navigator.geolocation.getCurrentPosition(resolve, reject);
+    });
+  }catch(e){
+    console.error(e);
+  }
   /* set list screen */
   document.body.setAttribute('data-scene', 'list');
   /* clone listDOM */
@@ -136,6 +143,7 @@ const initApp = async () => {
             offerToReceiveAudio: true,
             offerToReceiveVideo: true
           }));
+          console.log(pc.localDescription.sdp);
           sendToPrism.push({
             topic: "sendCreateOffer",
             sdp: pc.localDescription,
@@ -178,7 +186,7 @@ const initApp = async () => {
             }
           },
           "sendTrickleCandidate": ({ice})=> {
-            console.log("received iceCandidate");
+            console.log("received iceCandidate", ice);
             pc.addIceCandidate(ice);
           }
         };
@@ -234,7 +242,11 @@ const initApp = async () => {
       );
       sendToPrism.push({
         topic: "registerWaveInfo",
-        peerId: node.peerInfo.id.toB58String()
+        peerId: node.peerInfo.id.toB58String(),
+        geoInfo : {
+          latitude: geoPosition.coords.latitude,
+          longitude: geoPosition.coords.longitude,
+        }
       })
     });
   });
