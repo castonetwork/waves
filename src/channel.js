@@ -5,6 +5,8 @@ import adapter from "webrtc-adapter";
 
 const pull = require("pull-stream");
 const Pushable = require("pull-pushable");
+const Notify = require("pull-notify");
+const exitViewerNofity = Notify();
 const stringify = require("pull-stringify");
 const configuration = {
   iceServers: [{urls: "stun:stun.l.google.com:19302"}]
@@ -23,8 +25,11 @@ const gotoViewer = info => {
   document.body.setAttribute('data-scene', 'viewer');
   updateViewerInfo(info);
 };
-const gotoList = ()=> {
+const gotoList = (prismPeerId)=> {
   document.body.setAttribute("data-scene", "list");
+  //add disconnection have to occurred
+  exitViewerNofity(prismPeerId);
+
 };
 
 const updateChannelSnapshot = (peerId, snapshot) =>{
@@ -54,15 +59,13 @@ const initApp = async () => {
   serviceId = new URL(location.href).searchParams.get('serviceId');
 
   /* set list screen */
-  document.body.setAttribute('data-scene', 'list')
+  document.body.setAttribute('data-scene', 'list');
   /* clone listDOM */
   listDOM = document.querySelector('div.item');
   channelItem = listDOM.cloneNode(true);
   listDOM.remove();
 
   document.body.setAttribute('data-scene', 'noItem')
-
-  document.querySelector(".exitButton").addEventListener("click", gotoList);
 
   initLoadingScreen();
 
@@ -85,9 +88,26 @@ const initApp = async () => {
         mediaStream
       };
 
-
+      pull(
+        exitViewerNofity.listen(),
+        pull.filter( closedPeerId => {
+          console.log(`closed Peer Id : ${closedPeerId}`);
+          console.log(`connected prismId : ${prismPeerId}`);
+          return closedPeerId === prismPeerId}),
+        pull.drain( o =>{
+          prisms[prismPeerId].pc.getTransceivers().forEach(transceiver => transceiver.direction = 'inactive');
+          prisms[prismPeerId].pc.close();
+          prisms[prismPeerId].pc = null;
+        })
+      );
       const playChannel = async (peerId) => {
         /* initialize mediaStream */
+        let gotoListEvent = e =>{
+          document.querySelector(".exitButton").removeEventListener("click", gotoListEvent);
+          gotoList(prismPeerId);
+        };
+        document.querySelector(".exitButton").addEventListener("click", gotoListEvent);
+
         mediaStream.getTracks().forEach(o=>mediaStream.removeTrack(o));
         try {
           let pc = new RTCPeerConnection( { ...configuration, sdpSemantics: 'unified-plan' } );
