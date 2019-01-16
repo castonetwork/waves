@@ -50,10 +50,7 @@ function checkEmptyList() {
   }
 }
 
-let selectedFlowPeerId;
-let geoPosition = {
-  coords: {}
-};
+let geoPosition = {};
 const initApp = async () => {
   let prisms = {};
   window.prisms = prisms;
