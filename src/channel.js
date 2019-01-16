@@ -51,20 +51,19 @@ function checkEmptyList() {
 }
 
 let selectedFlowPeerId;
-
+let geoPosition = {
+  coords: {}
+};
 const initApp = async () => {
   let prisms = {};
   window.prisms = prisms;
   console.log("init app");
   serviceId = new URL(location.href).searchParams.get('serviceId');
-  let geoPosition = {
-    coords: {}
-  };
+
   try{
-    let position = await new Promise((resolve, reject)=>{
+    geoPosition = await new Promise((resolve, reject)=>{
       navigator.geolocation.getCurrentPosition(resolve, reject);
     });
-    geoPosition.coords = position.coords;
   }catch(e){
     console.error(e);
   }
@@ -243,14 +242,17 @@ const initApp = async () => {
           }
         })
       );
-      sendToPrism.push({
+      let registration = {
         topic: "registerWaveInfo",
         peerId: node.peerInfo.id.toB58String(),
-        coords : {
+      };
+      if(geoPosition.coords){
+        registration.coords = {
           latitude: geoPosition.coords.latitude,
           longitude: geoPosition.coords.longitude,
         }
-      })
+      }
+      sendToPrism.push(registration);
     });
   });
   node.on("peer:connect", peerInfo => {
