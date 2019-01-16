@@ -57,11 +57,14 @@ const initApp = async () => {
   window.prisms = prisms;
   console.log("init app");
   serviceId = new URL(location.href).searchParams.get('serviceId');
-  let geoPosition;
+  let geoPosition = {
+    coords: {}
+  };
   try{
-    geoPosition = await new Promise((resolve, reject)=>{
+    let position = await new Promise((resolve, reject)=>{
       navigator.geolocation.getCurrentPosition(resolve, reject);
     });
+    geoPosition.coords = position.coords;
   }catch(e){
     console.error(e);
   }
@@ -243,7 +246,7 @@ const initApp = async () => {
       sendToPrism.push({
         topic: "registerWaveInfo",
         peerId: node.peerInfo.id.toB58String(),
-        geoInfo : {
+        coords : {
           latitude: geoPosition.coords.latitude,
           longitude: geoPosition.coords.longitude,
         }
