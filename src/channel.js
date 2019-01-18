@@ -115,55 +115,62 @@ const initApp = async () => {
         document.querySelector(".exitButton").addEventListener("click", gotoListEvent);
 
         mediaStream.getTracks().forEach(o=>mediaStream.removeTrack(o));
-        try {
-          let pc = new RTCPeerConnection( { ...configuration, sdpSemantics: 'unified-plan' } );
-          prisms[prismPeerId].pc = pc;
-          pc.onicecandidate = event => {
-            console.log("[ICE]", event);
-            if (event.candidate) {
-              sendToPrism.push({
-                topic: "sendTrickleCandidate",
-                candidate: event.candidate
-              });
-            }
-          };
-          pc.oniceconnectionstatechange = function (e) {
-            console.log("[ICE STATUS] ", pc.iceConnectionState);
-            if(pc.iceConnectionState === "disconnected"){
-              pc.getTransceivers().forEach(transceiver => transceiver.direction = 'inactive');
-            }
-          };
-          pc.ontrack = async event => {
-            console.log("[ON track]", event);
-            mediaStream.addTrack(event.track);
-          };
 
-          await pc.setLocalDescription(await pc.createOffer({
-            offerToReceiveAudio: true,
-            offerToReceiveVideo: true
-          }));
-          console.log(pc.localDescription.sdp);
-          sendToPrism.push({
-            topic: "sendCreateOffer",
-            sdp: pc.localDescription,
-            peerId
-          });
-          console.log("localDescription", pc.localDescription);
-          /* set video srcObject to mediaStream */
-          document.getElementById("video").srcObject = mediaStream;
-
-        } catch (err) {
-          console.error(err);
-        }
+        sendToPrism.push({
+          topic: "requestCreateOffer",
+          peerId
+        });
         console.log("playChannel", mediaStream.getTracks());
+
       };
       const processEvents = async (event) => {
         let pc = prisms[prismPeerId].pc;
         console.log("Incoming event ", event.topic);
         const events = {
-          "sendCreatedAnswer": async ({sdp}) => {
-            console.log('controller answered', sdp)
-            await pc.setRemoteDescription(sdp)
+          "sendCreatedOffer": async ({sdp, peerId}) => {
+            try {
+              let pc = new RTCPeerConnection( { ...configuration, sdpSemantics: 'unified-plan' } );
+              prisms[prismPeerId].pc = pc;
+              pc.onicecandidate = event => {
+                console.log("[ICE]", event);
+                if (event.candidate) {
+                  sendToPrism.push({
+                    topic: "sendTrickleCandidate",
+                    candidate: event.candidate
+                  });
+                }
+              };
+              pc.oniceconnectionstatechange = function (e) {
+                console.log("[ICE STATUS] ", pc.iceConnectionState);
+                if(pc.iceConnectionState === "disconnected"){
+                  //pc.getTransceivers().forEach(transceiver => transceiver.direction = 'inactive');
+                  pc.close();
+                }
+              };
+              pc.ontrack = async event => {
+                console.log("[ON track]", event);
+                mediaStream.addTrack(event.track);
+              };
+              await pc.setRemoteDescription(sdp);
+              let answer = await pc.createAnswer({
+                offerToReceiveAudio:true,
+                offerToReceiveVideo:true,
+              });
+              console.log(answer);
+              await pc.setLocalDescription(answer);
+
+              console.log(pc.localDescription.sdp);
+              sendToPrism.push({
+                topic: "sendCreatedAnswer",
+                sdp: pc.localDescription,
+                peerId
+              });
+              console.log("localDescription", pc.localDescription);
+              /* set video srcObject to mediaStream */
+              document.getElementById("video").srcObject = mediaStream;
+            } catch (err) {
+              console.error(err);
+            }
           },
           "updateChannelInfo": ({peerId, info})=> {
             console.log("updateChannelInfo", peerId, info);
@@ -213,6 +220,7 @@ const initApp = async () => {
           item.addEventListener("click", async ()=> {
             gotoViewer(info);
             await playChannel(peerId);
+            document.getElementById("video").play();
           });
 
           updateItemDetails(item, info);
