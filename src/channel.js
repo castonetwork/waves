@@ -101,7 +101,6 @@ const initApp = async () => {
           console.log(`connected prismId : ${prismPeerId}`);
           return closedPeerId === prismPeerId}),
         pull.drain( o =>{
-          prisms[prismPeerId].pc.getTransceivers().forEach(transceiver => transceiver.direction = 'inactive');
           prisms[prismPeerId].pc.close();
           prisms[prismPeerId].pc = null;
         })
