@@ -9,7 +9,9 @@ const Notify = require("pull-notify");
 const exitViewerNofity = Notify();
 const stringify = require("pull-stringify");
 const configuration = {
-  iceServers: [{urls: "stun:stun.l.google.com:19302"}]
+  iceServers: [{urls: "stun:stun.l.google.com:19302"}
+    ,{urls:'turn:turn.casto.network:3789', "username":"casto","credential":"casto2019"}
+    ]
 };
 
 let listDOM, channelItem;
