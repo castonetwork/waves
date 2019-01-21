@@ -13,7 +13,6 @@ const configuration = {
 };
 
 let listDOM, channelItem;
-let serviceId;
 
 const createNode = require("./create-node");
 
@@ -55,15 +54,12 @@ const initApp = async () => {
   let prisms = {};
   window.prisms = prisms;
   console.log("init app");
-  serviceId = new URL(location.href).searchParams.get('serviceId');
+  let serviceId = new URL(location.href).searchParams.get('serviceId');
+  let longitude = parseFloat(new URL(location.href).searchParams.get('lng'));
+  let latitude = parseFloat(new URL(location.href).searchParams.get('lat'));
 
-  try{
-    geoPosition = await new Promise((resolve, reject)=>{
-      navigator.geolocation.getCurrentPosition(resolve, reject);
-    });
-  }catch(e){
-    console.error(e);
-  }
+  geoPosition.coords = !isNaN(latitude) && !isNaN(longitude) && {longitude, latitude} || undefined;
+
   /* set list screen */
   document.body.setAttribute('data-scene', 'list');
   /* clone listDOM */
