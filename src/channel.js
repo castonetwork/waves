@@ -212,6 +212,7 @@ const initApp = async () => {
         if (!item) {
           item = channelItem.cloneNode(true);
           item.setAttribute("id", peerId);
+          item.setAttribute("prismId", prismPeerId);
           item.addEventListener("click", async ()=> {
             gotoViewer(info);
             await playChannel(peerId);
@@ -262,11 +263,8 @@ const initApp = async () => {
     const peerId = peerInfo.id.toB58String();
     console.log("disconnected", peerId);
     if(prisms[peerId]){
-      const element = document.getElementById(peerId);
-      if (element) {
-        element.remove();
-        checkEmptyList();
-      }
+      document.querySelectorAll('[prismId='+peerId+']').forEach(o=>o.remove());
+      checkEmptyList();
       delete prisms[peerId];
     }
   });
