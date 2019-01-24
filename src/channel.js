@@ -140,6 +140,7 @@ const initApp = async () => {
                 if(pc.iceConnectionState === "disconnected"){
                   //pc.getTransceivers().forEach(transceiver => transceiver.direction = 'inactive');
                   pc.close();
+                  checkEmptyList();
                 }
               };
               pc.ontrack = async event => {
