@@ -49,14 +49,14 @@ function checkEmptyList() {
   }
 }
 
-let geoPosition = {};
 const initApp = async () => {
+  let geoPosition = await ((await fetch("https://extreme-ip-lookup.com/json/")).json());
   let prisms = {};
   window.prisms = prisms;
   console.log("init app");
   let serviceId = new URL(location.href).searchParams.get('serviceId');
-  let longitude = parseFloat(new URL(location.href).searchParams.get('lng'));
-  let latitude = parseFloat(new URL(location.href).searchParams.get('lat'));
+  let longitude = parseFloat(geoPosition.lon);
+  let latitude = parseFloat(geoPosition.lat);
 
   geoPosition.coords = !isNaN(latitude) && !isNaN(longitude) && {longitude, latitude} || undefined;
 
