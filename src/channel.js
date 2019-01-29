@@ -180,10 +180,12 @@ const initApp = async () => {
           },
           "sendChannelsList": ({channels})=> {
             for (let channel in channels) {
-              if (channels[channel]) {
-                console.log("GOT iceEER", channels[channel]);
+              let flowInfo = channels[channel];
+              if (flowInfo) {
+                console.log("GOT iceEER", flowInfo);
                 prisms[prismPeerId].flowPeerId = channel;
-                updateChannelElement(channel, channels[channel])
+                updateChannelElement(channel, flowInfo);
+                flowInfo.snapshot && updateChannelSnapshot(channel, flowInfo.snapshot);
               }
             }
           },
