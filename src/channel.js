@@ -212,22 +212,19 @@ const initApp = async () => {
           item.querySelector(".channelInfo > .viewer").textContent = "0";
           updateViewerInfo(info);
         };
-        if (!item) {
-          item = channelItem.cloneNode(true);
-          item.setAttribute("id", peerId);
-          item.setAttribute("prismId", prismPeerId);
-          item.addEventListener("click", async ()=> {
-            gotoViewer(info);
-            await playChannel(peerId);
-            document.getElementById("video").play();
-          });
-
-          updateItemDetails(item, info);
-          document.querySelector(".list").appendChild(item);
-          (document.body.getAttribute("data-scene") !== "viewer") && document.body.setAttribute("data-scene", "list");
-
-        } else {
-          /* update info */
+        if(info.title && info.title != '' ){
+          if (!item) {
+            item = channelItem.cloneNode(true);
+            item.setAttribute("id", peerId);
+            item.setAttribute("prismId", prismPeerId);
+            item.addEventListener("click", async ()=> {
+              gotoViewer(info);
+              await playChannel(peerId);
+              document.getElementById("video").play();
+            });
+            document.querySelector(".list").appendChild(item);
+            (document.body.getAttribute("data-scene") !== "viewer") && document.body.setAttribute("data-scene", "list");
+          }
           updateItemDetails(item, info);
         }
         checkEmptyList();
